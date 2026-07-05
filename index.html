@@ -1007,7 +1007,8 @@
             document.getElementById('txtFatherName').innerText = fatherName;
             
             // Masked Aadhaar layout rendering
-            document.getElementById('txtAadharNum').innerText = "[Aadhaar Redacted for Privacy]";
+            const formattedAadhar = rawAadhar.replace(/\s/g, '').replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3');
+document.getElementById('txtAadharNum').innerText = formattedAadhar;
             document.getElementById('txtGradeDate').innerText = `Grade ${grade} | Date: ${issueDate}`;
 
             // Image Dynamic Render Logic
