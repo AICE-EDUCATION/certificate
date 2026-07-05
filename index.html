@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AICE Certificate Generator Dashboard</title>
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #1a3a6b;
+            --primary-light: #2a5a9b;
+            --gold: #c9a84c;
+            --gold-dark: #aa8933;
+            --bg-dark: #0f1e36;
+            --panel-bg: #162a4a;
+            --text-light: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: rgba(201, 168, 76, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 2px solid var(--gold);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            flex: 1;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+
+        /* Form / Control Panel Side */
+        .control-panel {
+            background-color: var(--panel-bg);
+            padding: 25px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            color: var(--gold);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            background-color: rgba(15, 30, 54, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 10px 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 5px rgba(201, 168, 76, 0.4);
+        }
+
+        select.form-control option {
+            background-color: var(--bg-dark);
+            color: white;
+        }
+
+        .upload-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .upload-box {
+            border: 1px dashed var(--border);
+            background-color: rgba(15, 30, 54, 0.5);
+            border-radius: 4px;
+            padding: 12px 5px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .upload-box:hover {
+            background-color: rgba(201, 168, 76, 0.05);
+            border-color: var(--gold);
+        }
+
+        .upload-box input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-box span {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .upload-box .preview-status {
+            font-size: 10px;
+            color: var(--gold);
+            font-weight: bold;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 15px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--gold);
+            color: var(--bg-dark);
+            grid-column: span 2;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--gold-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--primary-light);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #366fae;
+        }
+
+        .shortcut-tip {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 15px;
+        }
+
+        /* Preview Workspace Side */
+        .preview-workspace {
+            padding: 40px;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0b1526;
+        }
+
+        /* Production Quality Landscape A4 Wrapper */
+        .certificate-wrapper {
+            width: 1123px;
+            height: 794px;
+            min-width: 1123px;
+            min-height: 794px;
+            background: #ffffff;
+            color: #111111;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            padding: 30px;
+            overflow: hidden;
+            transform-origin: center center;
+        }
+
+        /* Background Pattern Layers */
+        .cert-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.035;
+            font-weight: 800;
+            font-size: 10px;
+            color: #000000;
+            overflow: hidden;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .cert-bg-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            z-index: 2;
+            opacity: 0.05;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cert-bg-watermark img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Borders & Framing */
+        .cert-border-outer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 2px solid #c9a84c;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .cert-border-inner {
+            position: absolute;
+            top: 26px;
+            left: 26px;
+            right: 26px;
+            bottom: 26px;
+            border: 4px double #c9a84c;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .cert-corner {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #c9a84c;
+            z-index: 4;
+        }
+        .corner-tl { top: 35px; left: 35px; border-right: none; border-bottom: none; }
+        .corner-tr { top: 35px; right: 35px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: 35px; left: 35px; border-right: none; border-top: none; }
+        .corner-br { bottom: 35px; right: 35px; border-left: none; border-top: none; }
+
+        /* Actual Content Layout */
+        .cert-content {
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 25px 40px;
+            box-sizing: border-box;
+        }
+
+        /* Top Bar Layout */
+        .cert-header-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .cert-brand-block {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cert-logo-container {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            border: 1px solid rgba(26, 58, 107, 0.1);
+            border-radius: 4px;
+        }
+
+        .cert-logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .cert-brand-text h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a3a6b;
+            line-height: 1;
+        }
+
+        .cert-brand-text p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            color: #c9a84c;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .cert-meta-block {
+            text-align: right;
+        }
+
+        .cert-number {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            background: rgba(201, 168, 76, 0.1);
+            padding: 4px 10px;
+            border-radius: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Decorative Splitter */
+        .cert-divider {
+            width: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 5px 0;
+        }
+
+        .cert-line {
+            height: 1px;
+            flex: 1;
+            background: linear-gradient(90deg, transparent, rgba(201,168,76,1) 50%, transparent 100%);
+        }
+
+        .cert-diamond {
+            color: #c9a84c;
+            font-size: 12px;
+        }
+
+        /* Typography & Presentation Matrix */
+        .cert-title-area {
+            text-align: center;
+        }
+
+        .cert-main-title {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: #1a3a6b;
+            letter-spacing: 1px;
+        }
+
+        .cert-main-title span {
+            color: #c9a84c;
+        }
+
+        .cert-subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 18px;
+            color: #555;
+            margin-top: 5px;
+        }
+
+        .cert-recipient-area {
+            text-align: center;
+            width: 100%;
+        }
+
+        .cert-label {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+
+        .cert-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-weight: 700;
+            color: #1a3a6b;
+            margin: 8px 0;
+            display: inline-block;
+            border-bottom: 2px solid #c9a84c;
+            padding: 0 30px 4px 30px;
+        }
+
+        .cert-course-area {
+            text-align: center;
+        }
+
+        .cert-course-title {
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #2a5a9b;
+            letter-spacing: 0.5px;
+        }
+
+        /* Identity Matrix Parameters Grid */
+        .cert-details-grid {
+            width: 90%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-top: 1px dashed rgba(201, 168, 76, 0.4);
+            border-bottom: 1px dashed rgba(201, 168, 76, 0.4);
+            padding: 12px 0;
+            text-align: center;
+        }
+
+        .detail-item .lbl {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #777;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .detail-item .val {
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        /* Verification & Sign-off Elements */
+        .cert-footer-row {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 130px 1fr;
+            align-items: flex-end;
+        }
+
+        .footer-sign-side {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sig-wrap {
+            width: 160px;
+            height: 55px;
+            border-bottom: 1px solid #999;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 2px;
+            margin-bottom: 5px;
+        }
+
+        .sig-wrap img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .sign-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .sign-subtitle {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .footer-stamp-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .stamp-wrap {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.02);
+            border-radius: 50%;
+        }
+
+        .stamp-wrap img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .stamp-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #1a3a6b;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-qr-side {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .qr-meta {
+            text-align: right;
+        }
+
+        .qr-meta p {
+            font-size: 11px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .qr-meta span {
+            font-size: 9px;
+            color: #666;
+            display: block;
+        }
+
+        /* Expanded layout placeholder mapping to let high-density optical grids resolve sharply */
+        .qr-holder {
+            width: 122px;
+            height: 122px;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Extreme Bottom Row */
+        .cert-bottom-line {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #888;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .cert-bottom-line span {
+            color: #c9a84c;
+            font-weight: bold;
+        }
+
+        /* Responsive Configuration Matrix */
+        @media(max-width: 1400px) {
+            .preview-workspace {
+                justify-content: flex-start;
+            }
+            .certificate-wrapper {
+                transform: scale(0.8);
+                margin: -70px;
+            }
+        }
+
+        @media(max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
+            }
+            .control-panel {
+                height: auto;
+                overflow: visible;
+            }
+            .preview-workspace {
+                padding: 20px;
+                overflow-x: auto;
+                justify-content: center;
+            }
+            .certificate-wrapper {
+                transform: scale(0.65);
+                margin: -130px;
+            }
+        }
+
+        @media(max-width: 768px) {
+            .certificate-wrapper {
+                transform: scale(0.45);
+                margin: -210px;
+            }
+            .upload-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Native Print Override Stylesheet */
+        @media print {
+            body, .main-container, .preview-workspace {
+                background: #fff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            .control-panel, header {
+                display: none !important;
+            }
+            .certificate-wrapper {
+                position: absolute;
+                top: 0;
+                left: 0;
+                transform: scale(1) !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>AICE Admin Suite</h1>
+            <p>Learn Today, Lead Tomorrow</p>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 12px; color: var(--gold); font-weight: 600;">System Operator: Ayush Kumar Routray</span>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Dashboard Control Interface Side -->
+        <div class="control-panel">
+            <div class="section-title">Certificate Metadata</div>
+            
+            <div class="form-group">
+                <label>Certificate Serial Number</label>
+                <input type="text" id="inCertNum" class="form-control" value="AICE-CBCS-2026-0001" placeholder="AICE-ZZZZ-YYYY-XXXX">
+            </div>
+
+            <div class="section-title">Student Particulars</div>
+
+            <div class="form-group">
+                <label>Student Full Name *</label>
+                <input type="text" id="inName" class="form-control" value="Ayush Kumar Routray" placeholder="Enter Full Name">
+            </div>
+
+            <div class="form-group">
+                <label>Father's Guardian Name *</label>
+                <input type="text" id="inFather" class="form-control" value="P. K. Routray" placeholder="Enter Father's Name">
+            </div>
+
+            <div class="form-group">
+                <label>Aadhar Identity Matrix (12 Digits) *</label>
+                <input type="text" id="inAadhar" class="form-control" value="1234 5678 9012" maxlength="14" placeholder="0000 0000 0000">
+            </div>
+
+            <div class="section-title">Course & Assessment</div>
+
+            <div class="form-group">
+                <label>Program / Specialization</label>
+                <select id="inCourse" class="form-control">
+                    <option value="Basic Computer Applications">Certificate in Basic Computer Applications</option>
+                    <option value="Basic Python Programming">Certificate in Basic Python Programming</option>
+                    <option value="Basic AI & Machine Learning">Certificate in Basic AI & Machine Learning</option>
+                   
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Evaluated Matrix Grade</label>
+                <select id="inGrade" class="form-control">
+                    <option value="A+">A+ (Outstanding)</option>
+                    <option value="A">A (Excellent)</option>
+                    <option value="B+">B+ (Very Good)</option>
+                    <option value="B">B (Good)</option>
+                    <option value="C+">C+ (Average)</option>
+                    <option value="C">C (Pass)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Conferment Date</label>
+                <input type="date" id="inDate" class="form-control">
+            </div>
+
+            <div class="section-title">Institutional Media Asset Vault</div>
+            <div class="upload-row">
+                <div class="upload-box">
+                    <input type="file" id="upLogo" accept="image/*">
+                    <div style="font-size: 16px; color: var(--gold);">🏢</div>
+                    <span>Logo Image</span>
+                    <div class="preview-status" id="stLogo">Ready</div>
+                </div>
+                <div class="upload-box">
+                    <input type="file" id="upSign" accept="image/*">
+                    <div style="font-size: 16px; color: var(--gold);">✍️</div>
+                    <span>Signature</span>
+                    <div class="preview-status" id="stSign">Ready</div>
+                </div>
+                <div class="upload-box">
+                    <input type="file" id="upStamp" accept="image/*">
+                    <div style="font-size: 16px; color: var(--gold);">💮</div>
+                    <span>Auth Stamp</span>
+                    <div class="preview-status" id="stStamp">Ready</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="button" class="btn btn-primary" onclick="renderCertificateData()">Update Preview Frame</button>
+                <button type="button" class="btn btn-secondary" onclick="exportHighResPNG()">Download PNG</button>
+                <button type="button" class="btn btn-secondary" onclick="triggerNativePrint()">Print Asset</button>
+            </div>
+            <div class="shortcut-tip">Pro Tip: Press <strong>Ctrl + Enter</strong> anywhere to instantly update preview matrix.</div>
+        </div>
+
+        <!-- Render Target Preview Area -->
+        <div class="preview-workspace">
+            <div class="certificate-wrapper" id="captureCanvasArea">
+                <!-- Repeating Text Engine Container -->
+                <div class="cert-bg-pattern" id="patternGridInjector"></div>
+                
+                <!-- Center Watermark Element -->
+                <div class="cert-bg-watermark" id="watermarkTarget"></div>
+
+                <!-- Double Line Borders -->
+                <div class="cert-border-outer"></div>
+                <div class="cert-border-inner"></div>
+                
+                <!-- Ornamental Frames -->
+                <div class="cert-corner corner-tl"></div>
+                <div class="cert-corner corner-tr"></div>
+                <div class="cert-corner corner-bl"></div>
+                <div class="cert-corner corner-br"></div>
+
+                <!-- Structured Internal Payload -->
+                <div class="cert-content">
+                    <div class="cert-header-row">
+                        <div class="cert-brand-block">
+                            <div class="cert-logo-container" id="logoFrameTarget">
+                                <span style="font-size: 10px; color:#aaa;">No Logo</span>
+                            </div>
+                            <div class="cert-brand-text">
+                                <h2>AICE.</h2>
+                                <p>Ayush Institute of Computer Education</p>
+                            </div>
+                        </div>
+                        <div class="cert-meta-block">
+                            <div class="cert-number" id="txtCertNum">AICE-CBCS-2026-0001</div>
+                        </div>
+                    </div>
+
+                    <div class="cert-divider">
+                        <div class="cert-line"></div>
+                        <div class="cert-diamond">◆</div>
+                        <div class="cert-line"></div>
+                    </div>
+
+                    <div class="cert-title-area">
+                        <h1 class="cert-main-title">Certificate <span>of</span> Completion</h1>
+                        <p class="cert-subtitle">— This is to certify that —</p>
+                    </div>
+
+                    <div class="cert-recipient-area">
+                        
+                        <h2 class="cert-name" id="txtStudentName">Ayush Kumar Routray</h2>
+                        <p class="cert-label">has successfully completed the prescribed course of study</p>
+                    </div>
+
+                    <div class="cert-course-area">
+                        <h3 class="cert-course-title" id="txtCourseName">Certificate in Basic Computer Applications</h3>
+                        <p>We congratulate the candidate on this achievement and wish them continued success in their future academic and professional endeavors.</p>
+                    </div>
+
+                    <div class="cert-details-grid">
+                        <div class="detail-item">
+                            <p class="lbl">Son/Daughter of</p>
+                            <p class="val" id="txtFatherName">R. K. Routray</p>
+                        </div>
+                        <div class="detail-item">
+                            <p class="lbl">Aadhar Identity Index</p>
+                            <p class="val" id="txtAadharNum">[Omitted for Verification]</p>
+                        </div>
+                        <div class="detail-item">
+                            <p class="lbl">Evaluation Grade & Date</p>
+                            <p class="val" id="txtGradeDate">Grade A+ | 2026-07-03</p>
+                        </div>
+                    </div>
+
+                    <div class="cert-footer-row">
+                        <div class="footer-sign-side">
+                            <div class="sig-wrap" id="signFrameTarget">
+                                <span style="font-size: 9px; color:#aaa;">No Signature Loaded</span>
+                            </div>
+                            <p class="sign-title">Ayush Kumar Routray</p>
+                            <p class="sign-subtitle">Founder & Managing Director, AICE</p>
+                        </div>
+                        
+                        <div class="footer-stamp-center">
+                            <div class="stamp-wrap" id="stampFrameTarget">
+                                <span style="font-size: 9px; color:#aaa;">No Stamp</span>
+                            </div>
+                            <p class="stamp-label">AICE ESTD 2026</p>
+                        </div>
+
+                        <div class="footer-qr-side">
+                            <div class="qr-meta">
+                                <p>Scan to Verify</p>
+                                <span>Official Security Token</span>
+                            </div>
+                            <div class="qr-holder" id="qrcodeEngineOutput"></div>
+                        </div>
+                    </div>
+
+                    <div class="cert-bottom-line">
+                        ★ <span>AICE</span> ★ SECURE ACADEMIC DOCUMENT REPOSITORY SERIAL INDEX: <strong id="txtBottomCert">AICE-CBCS-2026-0001</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // System State Registries for Media Blobs
+        let base64Logo = null;
+        let base64Signature = null;
+        let base64Stamp = null;
+        let qrEngineInstance = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Set calendar object picker to current contextual time matrix
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('inDate').value = `${year}-${month}-${day}`;
+
+            // Initialize Background Matrices & Form Listeners
+            generateBackgroundTextMatrix();
+            attachInputFormatFilters();
+            
+            // Execute bootstrap rendering frame
+            renderCertificateData();
+        });
+
+        // Generate absolute coverage background grid
+        function generateBackgroundTextMatrix() {
+            const patternBox = document.getElementById('patternGridInjector');
+            let arrayPool = [];
+            for(let i = 0; i < 45; i++) {
+                let textLine = Array(35).fill("AICE").join(" &nbsp; ");
+                arrayPool.push(`<div>${textLine}</div>`);
+            }
+            patternBox.innerHTML = arrayPool.join("");
+        }
+
+        function attachInputFormatFilters() {
+            const aadharInput = document.getElementById('inAadhar');
+            aadharInput.addEventListener('input', (e) => {
+                let positionValue = e.target.value.replace(/\D/g, '');
+                if (positionValue.length > 12) positionValue = positionValue.slice(0, 12);
+                let groupedParts = positionValue.match(/.{1,4}/g);
+                e.target.value = groupedParts ? groupedParts.join(' ') : positionValue;
+            });
+
+            // Structural Hotkey Listeners
+            window.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    renderCertificateData();
+                }
+            });
+
+            // Dynamic Image File Processing Pipeline
+            setupImageLoader('upLogo', 'stLogo', (b64) => { base64Logo = b64; renderCertificateData(); });
+            setupImageLoader('upSign', 'stSign', (b64) => { base64Signature = b64; renderCertificateData(); });
+            setupImageLoader('upStamp', 'stStamp', (b64) => { base64Stamp = b64; renderCertificateData(); });
+        }
+
+        function setupImageLoader(elementId, statusId, callback) {
+            document.getElementById(elementId).addEventListener('change', function(e) {
+                if(this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        callback(evt.target.result);
+                        const stat = document.getElementById(statusId);
+                        stat.innerText = "Loaded ✓";
+                        stat.style.display = "block";
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+
+        // Processing and Validation Engine
+        function renderCertificateData() {
+            const certNum = document.getElementById('inCertNum').value.trim();
+            const studentName = document.getElementById('inName').value.trim();
+            const fatherName = document.getElementById('inFather').value.trim();
+            const rawAadhar = document.getElementById('inAadhar').value.trim();
+            const course = document.getElementById('inCourse').value;
+            const grade = document.getElementById('inGrade').value;
+            const issueDate = document.getElementById('inDate').value;
+
+            // Strict Validation Ruleset Matrix
+            if(!certNum || !studentName || !fatherName || !rawAadhar) {
+                alert("Processing Fault: All identity metadata values must be populated.");
+                return;
+            }
+            
+            const numericalDigits = rawAadhar.replace(/\s/g, '');
+            if(numericalDigits.length !== 12) {
+                alert("Processing Fault: Provided Identity value string length does not represent a valid 12-digit format.");
+                return;
+            }
+
+            // Map standard values into structural nodes
+            document.getElementById('txtCertNum').innerText = certNum;
+            document.getElementById('txtBottomCert').innerText = certNum;
+            document.getElementById('txtStudentName').innerText = studentName;
+            document.getElementById('txtCourseName').innerText = course;
+            document.getElementById('txtFatherName').innerText = fatherName;
+            
+            // Masked Aadhaar layout rendering
+            document.getElementById('txtAadharNum').innerText = "[Aadhaar Redacted for Privacy]";
+            document.getElementById('txtGradeDate').innerText = `Grade ${grade} | Date: ${issueDate}`;
+
+            // Image Dynamic Render Logic
+            if(base64Logo) {
+                document.getElementById('logoFrameTarget').innerHTML = `<img src="${base64Logo}" alt="Logo">`;
+                document.getElementById('watermarkTarget').innerHTML = `<img src="${base64Logo}" alt="Watermark">`;
+            }
+            if(base64Signature) {
+                document.getElementById('signFrameTarget').innerHTML = `<img src="${base64Signature}" alt="Signature">`;
+            }
+            if(base64Stamp) {
+                document.getElementById('stampFrameTarget').innerHTML = `<img src="${base64Stamp}" alt="Stamp">`;
+            }
+
+            // Formatted dynamic verification token block containing exact layout payload string
+            const structuralPlaintextToken = `${studentName}\n` +
+                                              `${certNum}\n` +
+                                              `THIS CERTIFICATE IS VERIFIED BY AICE ✔`;
+
+            const containerQR = document.getElementById('qrcodeEngineOutput');
+            containerQR.innerHTML = ""; 
+            
+            // Expanded width and optimized resolution footprint layout matrix
+            qrEngineInstance = new QRCode(containerQR, {
+                text: structuralPlaintextToken,
+                width: 120,
+                height: 120,
+                colorDark : "#1a3a6b",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+        }
+
+        // Export Engines
+        function exportHighResPNG() {
+            renderCertificateData(); 
+            const sourceTarget = document.getElementById('captureCanvasArea');
+            
+            alert("Compiling High-Resolution Engine Matrix Layer... Please wait.");
+            
+            html2canvas(sourceTarget, {
+                scale: 3, 
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                const structuralUri = canvas.toDataURL("image/png");
+                const transmissionLink = document.createElement('a');
+                transmissionLink.download = `AICE-CERT-${document.getElementById('inCertNum').value}.png`;
+                transmissionLink.href = structuralUri;
+                document.body.appendChild(transmissionLink);
+                transmissionLink.click();
+                document.body.removeChild(transmissionLink);
+            }).catch(err => {
+                console.error("Render pipeline failure: ", err);
+            });
+        }
+
+        function triggerNativePrint() {
+            renderCertificateData();
+            window.print();
+        }
+    </script>
+</body>
+</html>
